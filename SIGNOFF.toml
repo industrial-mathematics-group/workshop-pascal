@@ -23,3 +23,18 @@ Human-Review = "H1"
 AI-Review = "A0"
 Assisted-by = ["Claude Opus 5.5 (Anthropic)"]
 Reviewed-by = ["Pascal Jung"]
+
+# Plot of the fit, written and run by an AI agent; not yet reviewed by a person.
+[[annotations]]
+path = "analysis/plot_cooling.py"
+AI-Generation = "G3"
+Human-Review = "H0"
+AI-Review = "A0"
+Assisted-by = ["Claude Opus 5.5 (Anthropic)"]
+
+[[annotations]]
+path = "results/coffee-cooling-fit.png"
+AI-Generation = "G3"
+Human-Review = "H0"
+AI-Review = "A0"
+Assisted-by = ["Claude Opus 5.5 (Anthropic)"]
