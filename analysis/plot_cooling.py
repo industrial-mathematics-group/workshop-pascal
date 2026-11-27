@@ -2,6 +2,7 @@
 
 Uses the fit from fit_cooling.py, so the parameters match results/summary.md.
 The lower panel shows the residuals against the probe's +/-0.5 C accuracy band.
+The fit curve continues, dashed, past the last reading until it reaches 22 C.
 Needs numpy and matplotlib:
 
     python analysis/plot_cooling.py data/coffee-cooling.csv results/coffee-cooling-fit.png
@@ -22,6 +23,7 @@ import fit_cooling as fc
 
 PROBE_ACCURACY = 0.5  # degrees C (notes/lab-notes.md)
 DRINKABLE = 60.0  # degrees C
+NEARLY_ROOM = 22.0  # degrees C: the fit curve is drawn until it reaches this
 
 BLUE, ORANGE = "#257de0", "#f47230"
 INK, INK2, GRID = "#1f1f1f", "#6b6b6b", "#e6e6e6"
@@ -35,7 +37,10 @@ def main(data_path, out_path):
     def model(x):
         return fc.T_ROOM + (T0 - fc.T_ROOM) * np.exp(-k * np.asarray(x))
 
-    t60 = math.log((T0 - fc.T_ROOM) / (DRINKABLE - fc.T_ROOM)) / k
+    def time_to(temp):
+        return math.log((T0 - fc.T_ROOM) / (temp - fc.T_ROOM)) / k
+
+    t60, t_end = time_to(DRINKABLE), time_to(NEARLY_ROOM)
     residuals = np.array(T) - model(t)
 
     plt.rcParams.update({"font.size": 11, "axes.edgecolor": INK2, "axes.labelcolor": INK,
@@ -48,12 +53,17 @@ def main(data_path, out_path):
     tt = np.linspace(min(t), max(t), 300)
     ax.plot(tt, model(tt), color=ORANGE, lw=2, zorder=2,
             label=f"Newton fit: k = {k:.4f} ± {k_err:.4f} /min, T₀ = {T0:.1f} °C")
+    tt = np.linspace(max(t), t_end, 200)  # beyond the last reading
+    ax.plot(tt, model(tt), color=ORANGE, lw=2, ls=(0, (4, 3)), zorder=2, label="Fit extrapolated past the data")
     ax.scatter(t, T, s=40, color=BLUE, edgecolor="white", linewidth=1.5, zorder=3,
                label=f"Measured (probe ±{PROBE_ACCURACY} °C)")
     ax.plot([t60, t60], [fc.T_ROOM, DRINKABLE], color=INK2, lw=1, ls=":")
     ax.plot([0, t60], [DRINKABLE, DRINKABLE], color=INK2, lw=1, ls=":")
     ax.annotate(f"{DRINKABLE:.0f} °C at {t60:.1f} min", (t60, DRINKABLE),
                 xytext=(t60 + 3, DRINKABLE + 3), color=INK, fontsize=10)
+    ax.plot([t_end, t_end], [15, NEARLY_ROOM], color=INK2, lw=1, ls=":")
+    ax.annotate(f"{NEARLY_ROOM:.0f} °C at {t_end:.0f} min", (t_end, NEARLY_ROOM),
+                xytext=(t_end - 1, NEARLY_ROOM + 4), ha="right", color=INK, fontsize=10)
     ax.set_ylabel("Temperature (°C)")
     ax.set_ylim(15, 92)
     ax.set_title("Coffee cooling: data and Newton's law fit", loc="left", color=INK, fontsize=13)
@@ -64,8 +74,9 @@ def main(data_path, out_path):
     ar.scatter(t, residuals, s=30, color=BLUE, edgecolor="white", linewidth=1.2, zorder=3)
     ar.set_ylabel("Residual (°C)")
     ar.set_xlabel("Time (min)")
-    ar.set_xlim(-1.5, 61.5)
-    ar.set_xticks(range(0, 61, 6))
+    x_max = 12 * math.ceil(t_end / 12)
+    ar.set_xlim(-1.5, x_max + 1.5)
+    ar.set_xticks(range(0, x_max + 1, 12))
 
     for axis in (ax, ar):
         axis.grid(axis="y", color=GRID, lw=0.8)
