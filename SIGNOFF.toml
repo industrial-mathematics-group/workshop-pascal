@@ -15,3 +15,11 @@ enabled = true
 default-branch = "main"
 merge-method = "merge"
 undeclared = "baseline"
+
+[[annotations]]
+path = "analysis/**"
+AI-Generation = "G2"
+Human-Review = "H1"
+AI-Review = "A0"
+Assisted-by = ["Claude Opus 5.5 (Anthropic)"]
+Reviewed-by = ["Pascal Jung"]
